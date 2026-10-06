@@ -1,0 +1,32 @@
+{
+  "name": "souza-sa-advogados",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite --host 0.0.0.0",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview --host 0.0.0.0",
+    "test": "vitest run src",
+    "test:rules": "XDG_CONFIG_HOME=/tmp/souza-sa-config FIREBASE_EMULATORS_PATH=/tmp/souza-sa-emulators firebase emulators:exec --project demo-souza-sa-rules --only firestore 'vitest run tests/firestore.test.ts'",
+    "bootstrap": "node scripts/bootstrap.mjs"
+  },
+  "dependencies": {
+    "firebase": "^12.3.0",
+    "lucide-react": "^0.468.0",
+    "react": "^19.1.1",
+    "react-dom": "^19.1.1"
+  },
+  "devDependencies": {
+    "@firebase/rules-unit-testing": "^5.0.2",
+    "@types/node": "^22.18.6",
+    "@types/react": "^19.1.13",
+    "@types/react-dom": "^19.1.9",
+    "@vitejs/plugin-react": "^4.7.0",
+    "firebase-admin": "^13.5.0",
+    "firebase-tools": "^14.27.0",
+    "typescript": "~5.9.2",
+    "vite": "^6.3.6",
+    "vitest": "^3.2.4"
+  }
+}

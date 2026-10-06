@@ -1,0 +1,19 @@
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+    function lawyerIn(firmId) {
+      return request.auth != null
+        && firestore.exists(/databases/(default)/documents/users/$(request.auth.uid))
+        && firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.active == true
+        && firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.role == 'ADVOGADO'
+        && firestore.get(/databases/(default)/documents/users/$(request.auth.uid)).data.lawFirmId == firmId;
+    }
+    match /firmDocuments/{firmId}/{uploaderId}/{fileId} {
+      allow read: if lawyerIn(firmId);
+      allow create: if lawyerIn(firmId) && request.auth.uid == uploaderId
+        && request.resource.size < 20 * 1024 * 1024;
+      allow delete: if lawyerIn(firmId) && request.auth.uid == uploaderId;
+      allow update: if false;
+    }
+  }
+}

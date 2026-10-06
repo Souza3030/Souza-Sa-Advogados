@@ -1,0 +1,73 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function profile() { return get(/databases/$(database)/documents/users/$(request.auth.uid)).data; }
+    function active() { return signedIn() && exists(/databases/$(database)/documents/users/$(request.auth.uid)) && profile().active == true; }
+    function lawyer() { return active() && profile().role == 'ADVOGADO'; }
+    function firm(firmId) { return lawyer() && profile().lawFirmId == firmId; }
+    function validResponsible(data) {
+      let id = data.get('responsibleLawyerId', null);
+      return id == null || (exists(/databases/$(database)/documents/users/$(id))
+        && get(/databases/$(database)/documents/users/$(id)).data.lawFirmId == data.lawFirmId
+        && get(/databases/$(database)/documents/users/$(id)).data.role == 'ADVOGADO'
+        && get(/databases/$(database)/documents/users/$(id)).data.active == true);
+    }
+    function validCompany(data) {
+      let id = data.get('companyId', '');
+      return id == '' || (exists(/databases/$(database)/documents/companies/$(id))
+        && get(/databases/$(database)/documents/companies/$(id)).data.lawFirmId == data.lawFirmId);
+    }
+    function validCreate() { return lawyer() && request.resource.data.lawFirmId == profile().lawFirmId
+      && validResponsible(request.resource.data) && validCompany(request.resource.data); }
+    function validUpdate() { return firm(resource.data.lawFirmId) && request.resource.data.lawFirmId == resource.data.lawFirmId
+      && validResponsible(request.resource.data) && validCompany(request.resource.data); }
+    match /lawFirms/{firmId} {
+      allow read: if active() && profile().lawFirmId == firmId;
+      allow write: if false;
+    }
+    match /users/{userId} {
+      allow read: if active() && (request.auth.uid == userId || (lawyer() && resource.data.lawFirmId == profile().lawFirmId));
+      allow write: if false;
+    }
+    match /lawyerDirectory/{userId} {
+      allow read: if active() && resource.data.lawFirmId == profile().lawFirmId;
+      allow write: if false;
+    }
+    match /companies/{id} {
+      allow read: if firm(resource.data.lawFirmId) || (active() && profile().role == 'CLIENTE'
+        && profile().get('clientCompanyId', '') == id && resource.data.get('clientUserId', '') == request.auth.uid
+        && resource.data.lawFirmId == profile().lawFirmId);
+      allow create: if validCreate();
+      allow update: if validUpdate();
+      allow delete: if firm(resource.data.lawFirmId);
+    }
+    match /requests/{id} {
+      allow read: if firm(resource.data.lawFirmId) || (active() && profile().role == 'CLIENTE'
+        && resource.data.lawFirmId == profile().lawFirmId && resource.data.requestedBy == request.auth.uid
+        && resource.data.companyId == profile().get('clientCompanyId', ''));
+      allow create: if validCreate() || (active() && profile().role == 'CLIENTE'
+        && request.resource.data.lawFirmId == profile().lawFirmId
+        && request.resource.data.companyId == profile().get('clientCompanyId', '')
+        && request.resource.data.requestedBy == request.auth.uid
+        && request.resource.data.get('responsibleLawyerId', null) == null
+        && request.resource.data.status == 'ABERTA');
+      allow update: if validUpdate();
+      allow delete: if firm(resource.data.lawFirmId);
+    }
+    match /auditLogs/{id} {
+      allow read: if firm(resource.data.lawFirmId);
+      allow write: if false;
+    }
+    match /{collectionId}/{id} {
+      allow read: if collectionId in ['clients', 'processes', 'contracts', 'documents', 'deadlines', 'appointments']
+        && firm(resource.data.lawFirmId);
+      allow create: if collectionId in ['clients', 'processes', 'contracts', 'documents', 'deadlines', 'appointments']
+        && validCreate();
+      allow update: if collectionId in ['clients', 'processes', 'contracts', 'documents', 'deadlines', 'appointments']
+        && validUpdate();
+      allow delete: if collectionId in ['clients', 'processes', 'contracts', 'documents', 'deadlines', 'appointments']
+        && firm(resource.data.lawFirmId);
+    }
+  }
+}
