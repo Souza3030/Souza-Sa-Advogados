@@ -31,6 +31,7 @@ jobs:
       - run: npm ci
       - run: npm test
       - run: npm run test:rules
+      - run: node scripts/resolve-web-config.mjs
       - run: node scripts/check-web-config.mjs
       - run: npm run build
       - uses: actions/upload-pages-artifact@v3
