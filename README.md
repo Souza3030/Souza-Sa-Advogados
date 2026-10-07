@@ -19,19 +19,21 @@ O aplicativo mostra uma tela de configuração enquanto as variáveis `VITE_FIRE
 
 ## Publicação no GitHub Pages
 
-O repositório inclui `.github/workflows/pages.yml`. Ele publica a interface estática ao receber alterações na branch `main`, depois de executar testes e validar a configuração pública do Firebase. Em **Settings → Pages**, selecione **GitHub Actions** como origem. O workflow tenta obter a configuração pública já disponibilizada pelo Firebase Hosting. Se ela não estiver disponível, em **Settings → Secrets and variables → Actions → Variables**, cadastre `VITE_FIREBASE_API_KEY`, `VITE_FIREBASE_AUTH_DOMAIN`, `VITE_FIREBASE_STORAGE_BUCKET` e `VITE_FIREBASE_APP_ID` da configuração do **aplicativo Web** no Firebase Console. O ID do projeto já é `souzaesa-e167b`. Essas variáveis são públicas no bundle do navegador; nunca use a chave privada de uma conta de serviço.
+O repositório inclui `.github/workflows/pages.yml`. Ele publica a interface estática ao receber alterações na branch `main`, depois de executar testes e validar a configuração pública do Firebase. Em **Settings → Pages**, selecione **GitHub Actions** como origem. A configuração pública do aplicativo Web fica em `.env` e é incluída no bundle do navegador; nunca use a chave privada de uma conta de serviço nesse arquivo.
 
 Em Firebase Authentication, habilite o provedor **E-mail/senha** e acrescente o domínio do GitHub Pages à lista de domínios autorizados. A publicação da interface não publica as regras do Firestore, regras do Storage, índices nem a Function de auditoria; faça essa publicação no projeto Firebase antes de usar dados reais. O workflow só publica o site quando a configuração estiver completa e os testes passarem.
 
 ## Contas iniciais
 
-Com os e-mails de Azriel de Souza Soares e Francisco de Sá e credenciais administrativas disponíveis por Application Default Credentials, execute:
+Com os e-mails de Azriel de Souza Soares e Francisco de Sá e credenciais administrativas disponíveis por Application Default Credentials ou pela variável de ambiente privada `FIREBASE_ADMIN_SA_JSON`, execute:
 
 ```sh
 npm run bootstrap -- --project-id=SEU_PROJETO --azriel-email=AZRIEL@EXEMPLO.COM --francisco-email=FRANCISCO@EXEMPLO.COM
 ```
 
 O script aproveita contas existentes ou cria duas contas separadas no Firebase Authentication sem senha inicial. Também cria `lawFirms/souza-sa` e associa ambos os perfis ao mesmo escritório. A execução repetida preserva os perfis já existentes. Cada sócio deve informar seu e-mail na tela de login e usar **Definir ou recuperar minha senha** para receber a mensagem de definição de senha do Firebase. Não inclua senhas, tokens ou arquivos de conta de serviço no repositório.
+
+Se uma chave administrativa tiver sido exposta, revogue-a e disponibilize uma nova somente pela configuração segura do ambiente. O script lê `FIREBASE_ADMIN_SA_JSON` diretamente do processo; esse conteúdo nunca pertence ao `.env` do aplicativo Web nem ao GitHub.
 
 Para o portal de um cliente, crie sua conta em Authentication, um perfil `users/{uid}` com `role: "CLIENTE"`, `active: true`, `lawFirmId: "souza-sa"` e `clientCompanyId` igual ao ID de sua empresa. Defina `clientUserId` na empresa com esse UID. O cliente pode ver a empresa vinculada, os nomes da equipe jurídica e suas próprias solicitações. Crie perfis de usuários apenas por um processo administrativo confiável; as regras impedem que o navegador altere perfis e permissões.
 

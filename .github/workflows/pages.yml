@@ -17,11 +17,6 @@ jobs:
     runs-on: ubuntu-latest
     env:
       GITHUB_PAGES: 'true'
-      VITE_FIREBASE_API_KEY: ${{ vars.VITE_FIREBASE_API_KEY }}
-      VITE_FIREBASE_AUTH_DOMAIN: ${{ vars.VITE_FIREBASE_AUTH_DOMAIN }}
-      VITE_FIREBASE_PROJECT_ID: souzaesa-e167b
-      VITE_FIREBASE_STORAGE_BUCKET: ${{ vars.VITE_FIREBASE_STORAGE_BUCKET }}
-      VITE_FIREBASE_APP_ID: ${{ vars.VITE_FIREBASE_APP_ID }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -31,8 +26,7 @@ jobs:
       - run: npm ci
       - run: npm test
       - run: npm run test:rules
-      - run: node scripts/resolve-web-config.mjs
-      - run: node scripts/check-web-config.mjs
+      - run: node --env-file=.env scripts/check-web-config.mjs
       - run: npm run build
       - uses: actions/upload-pages-artifact@v3
         with:

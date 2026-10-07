@@ -1,4 +1,4 @@
-import { initializeApp, applicationDefault } from 'firebase-admin/app'
+import { initializeApp, applicationDefault, cert } from 'firebase-admin/app'
 import { getAuth } from 'firebase-admin/auth'
 import { getFirestore, FieldValue } from 'firebase-admin/firestore'
 
@@ -14,7 +14,15 @@ if (!projectId || !azrielEmail || !franciscoEmail || azrielEmail === franciscoEm
   process.exit(1)
 }
 
-initializeApp({ credential: applicationDefault(), projectId })
+let credential = applicationDefault()
+if (process.env.FIREBASE_ADMIN_SA_JSON) {
+  let account
+  try { account = JSON.parse(process.env.FIREBASE_ADMIN_SA_JSON) }
+  catch { throw new Error('FIREBASE_ADMIN_SA_JSON contém JSON inválido.') }
+  if (account.project_id !== projectId) throw new Error('A conta administrativa pertence a outro projeto.')
+  credential = cert(account)
+}
+initializeApp({ credential, projectId })
 const auth = getAuth()
 const db = getFirestore()
 const firmId = 'souza-sa'
