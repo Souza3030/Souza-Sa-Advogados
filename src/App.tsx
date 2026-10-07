@@ -147,6 +147,14 @@ function Empty({ text, action, small = false }: { text: string; action?: () => v
   return <div className={`empty ${small ? 'small' : ''}`}><span className="empty-icon"><FolderOpen size={small ? 20 : 28}/></span><strong>{text}</strong>{action && <button onClick={action}>Adicionar primeiro registro <ArrowRight size={15}/></button>}</div>
 }
 
+function authFailureMessage(cause: unknown) {
+  const code = (cause as { code?: string })?.code
+  if (code === 'auth/configuration-not-found' || code === 'auth/operation-not-allowed') return 'O Firebase Authentication ainda não está configurado para login por e-mail e senha neste projeto.'
+  if (code === 'auth/invalid-api-key') return 'A configuração pública do Firebase está incorreta. Solicite a verificação do aplicativo Web.'
+  if (code === 'auth/network-request-failed') return 'Não foi possível conectar ao Firebase. Verifique a internet e tente novamente.'
+  return 'E-mail ou senha inválidos. Verifique seus dados e tente novamente.'
+}
+
 function Login() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -156,7 +164,7 @@ function Login() {
   async function submit(event: FormEvent) {
     event.preventDefault(); setBusy(true); setError('')
     try { await signInWithEmailAndPassword(auth, email, password) }
-    catch { setError('E-mail ou senha inválidos. Verifique seus dados e tente novamente.') }
+    catch (cause) { setError(authFailureMessage(cause)) }
     finally { setBusy(false) }
   }
   async function resetPassword() {
@@ -165,7 +173,7 @@ function Login() {
     try {
       await sendPasswordResetEmail(auth, email)
       setNotice('Se o e-mail estiver cadastrado, você receberá instruções para definir a senha.')
-    } catch { setError('Não foi possível solicitar a recuperação. Tente novamente mais tarde.') }
+    } catch (cause) { setError(authFailureMessage(cause)) }
   }
   return <div className="login-page"><div className="login-visual"><div className="login-brand"><div className="brand-mark">S<span>&</span>S</div><span>Souza & Sá<small>ADVOCACIA</small></span></div><div className="login-quote"><span>“</span><h1>Excelência jurídica,<br/><em>trabalho em conjunto.</em></h1><p>Um espaço para organizar o que importa e acompanhar cada responsabilidade.</p></div><div className="login-footer">© {new Date().getFullYear()} Souza & Sá Advocacia</div></div><div className="login-form-side"><div className="login-card"><div className="eyebrow">ÁREA RESTRITA</div><h2>Bem-vindo de volta</h2><p>Acesse sua conta para entrar no escritório.</p><form onSubmit={submit}><label>E-mail<input type="email" autoComplete="username" required value={email} onChange={e => setEmail(e.target.value)} placeholder="seu@email.com"/></label><label>Senha<input type="password" autoComplete="current-password" required value={password} onChange={e => setPassword(e.target.value)} placeholder="••••••••"/></label>{error && <div className="form-error" role="alert">{error}</div>}{notice && <div className="form-notice" role="status">{notice}</div>}<button className="button primary login-submit" disabled={busy}>{busy ? 'Entrando…' : 'Entrar no escritório'} <ArrowRight size={18}/></button><button type="button" className="reset-link" onClick={resetPassword}>Definir ou recuperar minha senha</button></form><div className="login-help"><ShieldCheck size={17}/> Acesso protegido e individual</div></div></div></div>
 }

@@ -9,10 +9,12 @@ const args = Object.fromEntries(process.argv.slice(2).map(part => {
 const projectId = args['project-id'] || process.env.GOOGLE_CLOUD_PROJECT
 const azrielEmail = args['azriel-email']?.trim().toLowerCase()
 const franciscoEmail = args['francisco-email']?.trim().toLowerCase()
+const initialPassword = process.env.FIREBASE_INITIAL_PASSWORD
 if (!projectId || !azrielEmail || !franciscoEmail || azrielEmail === franciscoEmail) {
   console.error('Uso: npm run bootstrap -- --project-id=ID --azriel-email=EMAIL --francisco-email=EMAIL')
   process.exit(1)
 }
+if (initialPassword && initialPassword.length < 6) throw new Error('FIREBASE_INITIAL_PASSWORD deve ter pelo menos seis caracteres.')
 
 let credential = applicationDefault()
 if (process.env.FIREBASE_ADMIN_SA_JSON) {
@@ -43,6 +45,7 @@ for (const snapshot of existingProfiles) {
   if (snapshot?.exists && snapshot.data().lawFirmId !== firmId) throw new Error(`A conta ${snapshot.id} já pertence a outro escritório.`)
 }
 const authUsers = await Promise.all(partners.map((partner, index) => foundUsers[index] || auth.createUser({ email: partner.email, displayName: partner.name })))
+if (initialPassword) await Promise.all(authUsers.map(user => auth.updateUser(user.uid, { password: initialPassword })))
 
 const batch = db.batch()
 const firm = db.collection('lawFirms').doc(firmId)
@@ -64,4 +67,6 @@ partners.forEach((partner, index) => {
   }, { merge: true })
 })
 await batch.commit()
-console.log('Escritório e contas individuais dos dois sócios preparados. Cada sócio pode definir a senha pela recuperação de acesso.')
+console.log(initialPassword
+  ? 'Escritório e contas individuais dos dois sócios preparados com senha inicial. Recomende a troca após o primeiro acesso.'
+  : 'Escritório e contas individuais dos dois sócios preparados. Cada sócio pode definir a senha pela recuperação de acesso.')

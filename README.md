@@ -31,7 +31,9 @@ Com os e-mails de Azriel de Souza Soares e Francisco de Sá e credenciais admini
 npm run bootstrap -- --project-id=SEU_PROJETO --azriel-email=AZRIEL@EXEMPLO.COM --francisco-email=FRANCISCO@EXEMPLO.COM
 ```
 
-O script aproveita contas existentes ou cria duas contas separadas no Firebase Authentication sem senha inicial. Também cria `lawFirms/souza-sa` e associa ambos os perfis ao mesmo escritório. A execução repetida preserva os perfis já existentes. Cada sócio deve informar seu e-mail na tela de login e usar **Definir ou recuperar minha senha** para receber a mensagem de definição de senha do Firebase. Não inclua senhas, tokens ou arquivos de conta de serviço no repositório.
+O script aproveita contas existentes ou cria duas contas separadas no Firebase Authentication, por padrão sem senha inicial. Também cria `lawFirms/souza-sa` e associa ambos os perfis ao mesmo escritório. A execução repetida preserva os perfis já existentes. Sem senha inicial, cada sócio deve informar seu e-mail na tela de login e usar **Definir ou recuperar minha senha** para receber a mensagem de definição de senha do Firebase. Não inclua senhas, tokens ou arquivos de conta de serviço no repositório.
+
+Se `FIREBASE_INITIAL_PASSWORD` estiver definida no ambiente seguro durante o provisionamento, o script aplica essa senha inicial às duas contas existentes ou novas. Ela nunca deve ser colocada no `.env` público, no repositório ou na linha de comando. Retire a variável após o provisionamento e peça que cada sócio altere sua senha.
 
 Se uma chave administrativa tiver sido exposta, revogue-a e disponibilize uma nova somente pela configuração segura do ambiente. O script lê `FIREBASE_ADMIN_SA_JSON` diretamente do processo; esse conteúdo nunca pertence ao `.env` do aplicativo Web nem ao GitHub.
 
