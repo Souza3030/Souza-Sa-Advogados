@@ -44,3 +44,9 @@ jobs:
     steps:
       - id: deployment
         uses: actions/deploy-pages@v4
+      - name: Verificar site publicado
+        env:
+          PAGE_URL: ${{ steps.deployment.outputs.page_url }}
+        run: |
+          curl --fail --silent --show-error --location --retry 12 --retry-delay 5 --retry-all-errors "$PAGE_URL" -o /tmp/souza-sa-page.html
+          grep -q '/Souza-Sa-Advogados/assets/' /tmp/souza-sa-page.html
